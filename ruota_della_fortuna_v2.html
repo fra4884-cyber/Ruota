@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ruota della sFORTUNA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@700;900&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── RESET & BASE ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0d1a;
+      --surface:  #161628;
+      --border:   #2a2a4a;
+      --gold:     #ffd700;
+      --gold2:    #ffaa00;
+      --text:     #f0eaff;
+      --muted:    #8888aa;
+      --accent:   #e040fb;
+      --red:      #ff4444;
+      --green:    #00e676;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+      background-image:
+        radial-gradient(ellipse at 20% 10%, #1a0a3a 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 90%, #0a1a3a 0%, transparent 50%);
+    }
+
+    /* ── HEADER ── */
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    header h1 {
+      font-family: 'Bangers', cursive;
+      font-size: clamp(2.4rem, 7vw, 4rem);
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      filter: drop-shadow(0 0 18px rgba(255,215,0,0.35));
+    }
+    header p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+    /* lucky-badge removed */
+
+    /* ── LAYOUT ── */
+    .game-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px;
+      justify-content: center;
+      align-items: flex-start;
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    /* ── WHEEL AREA ── */
+    .wheel-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      flex: 0 0 auto;
+    }
+
+    .wheel-container {
+      position: relative;
+      width: 440px;
+      height: 440px;
+      max-width: 90vw;
+      max-height: 90vw;
+    }
+
+    /* Outer glow ring */
+    .wheel-container::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--gold), var(--accent), #00e5ff, var(--green), var(--gold2), var(--red), var(--gold)
+      );
+      filter: blur(12px);
+      opacity: 0.45;
+      animation: ringPulse 3s ease-in-out infinite;
+      z-index: 0;
+    }
+    @keyframes ringPulse {
+      0%,100% { opacity: 0.35; }
+      50%      { opacity: 0.65; }
+    }
+
+    canvas#wheel {
+      position: relative;
+      z-index: 1;
+      border-radius: 50%;
+      box-shadow: 0 0 40px rgba(0,0,0,0.7);
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Arrow indicator */
+    .arrow {
+      position: absolute;
+      right: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      width: 0;
+      height: 0;
+      border-top: 18px solid transparent;
+      border-bottom: 18px solid transparent;
+      border-right: 36px solid var(--gold);
+      filter: drop-shadow(0 0 8px rgba(255,215,0,0.8));
+    }
+
+    /* Center hub */
+    .hub {
+      position: absolute;
+      z-index: 12;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffffff, #c0c0c0, #707070);
+      border: 4px solid #fff;
+      box-shadow: 0 0 20px rgba(255,255,255,0.5), inset 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    /* Spin button */
+    #spinBtn {
+      font-family: 'Bangers', cursive;
+      font-size: 1.7rem;
+      letter-spacing: 2px;
+      color: #000;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      border: none;
+      padding: 14px 52px;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(255,215,0,0.4), 0 2px 0 #a07800;
+      transition: transform 0.12s, box-shadow 0.12s, filter 0.12s;
+      position: relative;
+      overflow: hidden;
+    }
+    #spinBtn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 60%);
+      border-radius: inherit;
+    }
+    #spinBtn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 10px 32px rgba(255,215,0,0.55), 0 2px 0 #a07800; }
+    #spinBtn:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 3px 12px rgba(255,215,0,0.3), 0 1px 0 #a07800; }
+    #spinBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── RESULT BANNER ── */
+    #result {
+      font-family: 'Bangers', cursive;
+      font-size: 1.5rem;
+      letter-spacing: 2px;
+      text-align: center;
+      min-height: 2rem;
+      background: linear-gradient(135deg, var(--gold), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+    #result.visible { opacity: 1; }
+
+    /* ── SIDE PANEL ── */
+    .side-panel {
+      flex: 1 1 260px;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+    }
+    .panel-card h2 {
+      font-family: 'Bangers', cursive;
+      font-size: 1.3rem;
+      letter-spacing: 1px;
+      color: var(--gold);
+      margin-bottom: 14px;
+    }
+
+    /* Add word form */
+    .add-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #wordInput {
+      background: #0d0d1a;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #wordInput:focus { border-color: var(--gold); }
+    #wordInput::placeholder { color: var(--muted); font-weight: 700; }
+
+    #addBtn {
+      font-family: 'Bangers', cursive;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      color: #000;
+      background: linear-gradient(135deg, var(--green), #00c853);
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      box-shadow: 0 3px 12px rgba(0,230,118,0.3);
+      transition: transform 0.1s, filter 0.1s;
+    }
+    #addBtn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    #addBtn:active { transform: translateY(1px); }
+
+    /* Slice list */
+    #sliceList {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 280px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    #sliceList::-webkit-scrollbar { width: 4px; }
+    #sliceList::-webkit-scrollbar-track { background: transparent; }
+    #sliceList::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .slice-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #0d0d1a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
+      animation: slideIn 0.25s ease;
+    }
+    @keyframes slideIn { from { opacity:0; transform: translateX(-10px); } to { opacity:1; transform: none; } }
+
+    .slice-dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    .slice-name {
+      flex: 1;
+      font-weight: 700;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .lucky-tag {
+      font-size: 0.65rem;
+      background: linear-gradient(90deg, #ff4444, #ff9900);
+      color: #fff;
+      padding: 1px 6px;
+      border-radius: 20px;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+    .remove-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 0 2px;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .remove-btn:hover { color: var(--red); }
+
+    /* ── CONFETTI CANVAS ── */
+    #confetti {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── WINNER MODAL ── */
+    #modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s;
+    }
+    #modal.show { opacity: 1; pointer-events: all; }
+    .modal-box {
+      background: var(--surface);
+      border: 2px solid var(--gold);
+      border-radius: 24px;
+      padding: 40px 52px;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(255,215,0,0.25);
+      transform: scale(0.85);
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      max-width: 90vw;
+    }
+    #modal.show .modal-box { transform: scale(1); }
+    .modal-box .emoji { font-size: 3rem; margin-bottom: 8px; }
+    .modal-box h2 { font-family:'Bangers',cursive; font-size:1.4rem; letter-spacing:2px; color:var(--muted); }
+    .modal-box .winner-word {
+      font-family: 'Bangers', cursive;
+      font-size: clamp(2rem, 8vw, 3.2rem);
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, var(--gold), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 6px 0 18px;
+    }
+    .modal-close {
+      font-family: 'Bangers', cursive;
+      font-size: 1.2rem;
+      letter-spacing: 1px;
+      color: #000;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      border: none;
+      border-radius: 50px;
+      padding: 10px 40px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(255,215,0,0.35);
+    }
+    .modal-close:hover { filter: brightness(1.1); }
+
+    /* ── EMPTY STATE ── */
+    #emptyMsg {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 5;
+      pointer-events: none;
+    }
+    #emptyMsg .empty-icon { font-size: 2.8rem; display: block; margin-bottom: 6px; }
+    #emptyMsg p {
+      font-family: 'Bangers', cursive;
+      font-size: 1.15rem;
+      letter-spacing: 1px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    #emptyMsg.hidden { display: none; }
+
+    /* ── SPIN WARNING ── */
+    #spinWarn {
+      font-family: 'Bangers', cursive;
+      font-size: 1rem;
+      letter-spacing: 1px;
+      color: var(--red);
+      text-align: center;
+      min-height: 1.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    #spinWarn.visible { opacity: 1; }
+
+    @media (max-width: 600px) {
+      .wheel-container { width: 320px; height: 320px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── CONFETTI ── -->
+<canvas id="confetti"></canvas>
+
+<!-- ── WINNER MODAL ── -->
+<div id="modal">
+  <div class="modal-box">
+    <div class="emoji">💀</div>
+    <h2>Sfigato della giornata</h2>
+    <div class="winner-word" id="modalWord"></div>
+    <button class="modal-close" onclick="closeModal()">CONTINUA</button>
+  </div>
+</div>
+
+<!-- ── HEADER ── -->
+<header>
+  <h1>🎡 Ruota della <span style="color:#ff4444;-webkit-text-fill-color:#ff4444;">s</span>FORTUNA</h1>
+  <p>Aggiungi le opzioni e scopri chi è sfigato!</p>
+
+</header>
+
+<!-- ── GAME ── -->
+<div class="game-wrap">
+
+  <!-- WHEEL -->
+  <div class="wheel-area">
+    <div class="wheel-container">
+      <canvas id="wheel"></canvas>
+      <div class="arrow"></div>
+      <div class="hub"></div>
+      <!-- Messaggio stato vuoto -->
+      <div id="emptyMsg">
+        <span class="empty-icon">🎯</span>
+        <p>Aggiungi almeno<br>2 opzioni per giocare!</p>
+      </div>
+    </div>
+    <div id="result"></div>
+    <div id="spinWarn">⚠️ Aggiungi almeno 2 opzioni!</div>
+    <button id="spinBtn" onclick="spin()">🎰 GIRA!</button>
+  </div>
+
+  <!-- SIDE PANEL -->
+  <div class="side-panel">
+
+    <div class="panel-card">
+      <h2>➕ Aggiungi Parola</h2>
+      <div class="add-form">
+        <input id="wordInput" type="text" placeholder="Scrivi una parola…" maxlength="20"/>
+        <button id="addBtn" onclick="addWord()">Aggiungi Parola</button>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <h2>📋 Spicchi</h2>
+      <ul id="sliceList"></ul>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   CONFIG
+   ══════════════════════════════════════════════════ */
+
+const LUCKY_WORDS = ['ball', 'palle', 'calzini'];
+
+// Palette vivace (ciclica)
+const COLORS = [
+  '#e53935','#1e88e5','#43a047','#fdd835',
+  '#fb8c00','#8e24aa','#00acc1','#6d4c41',
+  '#e91e63','#00897b','#f4511e','#3949ab',
+  '#c0ca33','#d81b60','#039be5','#7cb342',
+];
+
+/* ══════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════ */
+
+// Dati spicchi: { label, color }
+let slices = [];
+
+let currentAngle = 0;   // angolo corrente della ruota (radianti)
+let spinning = false;
+
+/* ══════════════════════════════════════════════════
+   CANVAS SETUP
+   ══════════════════════════════════════════════════ */
+
+const canvas  = document.getElementById('wheel');
+const ctx     = canvas.getContext('2d');
+const DPR     = window.devicePixelRatio || 1;
+const SIZE    = 440;
+
+canvas.width  = SIZE * DPR;
+canvas.height = SIZE * DPR;
+ctx.scale(DPR, DPR);
+
+const CX = SIZE / 2;   // centro X
+const CY = SIZE / 2;   // centro Y
+const R  = SIZE / 2 - 6; // raggio
+
+/* ══════════════════════════════════════════════════
+   DRAW WHEEL
+   ══════════════════════════════════════════════════ */
+
+function drawWheel() {
+  ctx.clearRect(0, 0, SIZE, SIZE);
+  const emptyMsg = document.getElementById('emptyMsg');
+  const n = slices.length;
+
+  if (n === 0) {
+    // Disegna cerchio grigio vuoto
+    ctx.beginPath();
+    ctx.arc(CX, CY, R, 0, 2 * Math.PI);
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    emptyMsg.classList.remove('hidden');
+    return;
+  }
+
+  // Nascondi messaggio vuoto appena ci sono spicchi
+  emptyMsg.classList.add('hidden');
+
+  const sliceAngle = (2 * Math.PI) / n;
+
+  slices.forEach((s, i) => {
+    const startA = currentAngle + i * sliceAngle;
+    const endA   = startA + sliceAngle;
+    const midA   = startA + sliceAngle / 2;
+
+    // ── Spicchio ──
+    ctx.beginPath();
+    ctx.moveTo(CX, CY);
+    ctx.arc(CX, CY, R, startA, endA);
+    ctx.closePath();
+    ctx.fillStyle = s.color;
+    ctx.fill();
+
+    // Bordo spicchio
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // ── Testo ──
+    ctx.save();
+    ctx.translate(CX, CY);
+    ctx.rotate(midA);
+
+    // Posizione testo: circa a 62% del raggio
+    const textR = R * 0.62;
+    ctx.translate(textR, 0);
+    ctx.rotate(Math.PI / 2); // testo verticale verso l'esterno (radiale)
+
+    const maxWidth = sliceAngle * R * 0.85;
+    const fontSize = Math.max(10, Math.min(18, maxWidth * 0.38));
+    ctx.font = `900 ${fontSize}px 'Nunito', sans-serif`;
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Ombra testo
+    ctx.shadowColor = 'rgba(0,0,0,0.6)';
+    ctx.shadowBlur  = 4;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 1;
+
+    ctx.fillText(s.label, 0, 0, maxWidth);
+    ctx.restore();
+  });
+
+  // ── Bordo esterno ──
+  ctx.beginPath();
+  ctx.arc(CX, CY, R, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+  ctx.lineWidth = 5;
+  ctx.stroke();
+
+  // ── Bordo dorato ──
+  ctx.beginPath();
+  ctx.arc(CX, CY, R - 2, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(255,215,0,0.6)';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+/* ══════════════════════════════════════════════════
+   PROBABILITÀ PESATA
+   ══════════════════════════════════════════════════ */
+
+function isLucky(label) {
+  const normalized = label.trim().toLowerCase();
+  return LUCKY_WORDS.some(w => {
+    const word = w.toLowerCase();
+    const regex = new RegExp('\\b' + word + '\\b', 'i');
+    return regex.test(normalized);
+  });
+}
+
+/**
+ * Sceglie l'indice dello spicchio vincente.
+ * Le parole "lucky" hanno peso 2, le altre peso 1.
+ * Restituisce l'indice nello array slices.
+ */
+function weightedRandom() {
+  const weights = slices.map(s => isLucky(s.label) ? 2 : 1);
+  const total   = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < weights.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return i;
+  }
+  return slices.length - 1;
+}
+
+/* ══════════════════════════════════════════════════
+   SPIN
+   ══════════════════════════════════════════════════ */
+
+function spin() {
+  const warnEl = document.getElementById('spinWarn');
+  if (slices.length < 2) {
+    warnEl.classList.add('visible');
+    setTimeout(() => warnEl.classList.remove('visible'), 2500);
+    return;
+  }
+  warnEl.classList.remove('visible');
+  if (spinning) return;
+  spinning = true;
+
+  const btn = document.getElementById('spinBtn');
+  btn.disabled = true;
+
+  const resultEl = document.getElementById('result');
+  resultEl.textContent = '';
+  resultEl.classList.remove('visible');
+
+  // 1. Scegli il vincitore con peso
+  const winnerIndex = weightedRandom();
+
+  // 2. Calcola l'angolo finale affinché il vincitore sia sotto la freccia (destra, 0°)
+  const n          = slices.length;
+  const sliceAngle = (2 * Math.PI) / n;
+
+  // La freccia punta a 0 radianti (destra).
+  // Lo spicchio i occupa [currentAngle + i*sliceAngle, currentAngle + (i+1)*sliceAngle].
+  // Vogliamo che il centro dello spicchio vincente sia a 0 dopo la rotazione.
+  // targetAngle = -(winnerIndex * sliceAngle + sliceAngle/2)  (normalizzato)
+
+  const targetOffset = -(winnerIndex * sliceAngle + sliceAngle / 2);
+  // Aggiungi giri completi (5-8) per un effetto spettacolare
+  const extraSpins   = (5 + Math.floor(Math.random() * 4)) * 2 * Math.PI;
+  const finalAngle   = targetOffset - (targetOffset % (2 * Math.PI)) + extraSpins;
+
+  // 3. Animazione ease-out
+  const duration    = 4000 + Math.random() * 1500; // ms
+  const startAngle  = currentAngle;
+  const delta       = finalAngle - (currentAngle % (2 * Math.PI) - targetOffset % (2 * Math.PI));
+  // Ricalcolo semplificato: giriamo di extraSpins + aggiustamento
+  const totalDelta  = extraSpins + (targetOffset - currentAngle % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+
+  const startTime   = performance.now();
+
+  function easeOut(t) {
+    // Quartic ease out
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const t       = Math.min(elapsed / duration, 1);
+    const eased   = easeOut(t);
+
+    currentAngle  = startAngle + totalDelta * eased;
+    drawWheel();
+
+    if (t < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      // Fine rotazione
+      currentAngle = currentAngle % (2 * Math.PI);
+      spinning  = false;
+      btn.disabled = false;
+
+      const winner = slices[winnerIndex].label;
+      resultEl.textContent = `💀 ${winner}`;
+      resultEl.classList.add('visible');
+      showModal(winner);
+      launchConfetti();
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+/* ══════════════════════════════════════════════════
+   ADD / REMOVE WORDS
+   ══════════════════════════════════════════════════ */
+
+function addWord() {
+  const input = document.getElementById('wordInput');
+  const raw   = input.value.trim();
+  if (!raw) return;
+
+  slices.push({
+    label: raw,
+    color: COLORS[slices.length % COLORS.length],
+  });
+
+  input.value = '';
+  renderList();
+  drawWheel();
+}
+
+function removeSlice(i) {
+  if (slices.length <= 2) {
+    const warnEl = document.getElementById('spinWarn');
+    warnEl.textContent = '⚠️ Servono almeno 2 opzioni!';
+    warnEl.classList.add('visible');
+    setTimeout(() => { warnEl.classList.remove('visible'); warnEl.textContent = '⚠️ Aggiungi almeno 2 opzioni!'; }, 2000);
+    return;
+  }
+  slices.splice(i, 1);
+  // Ricalcola colori per coerenza
+  slices = slices.map((s, idx) => ({ ...s, color: COLORS[idx % COLORS.length] }));
+  renderList();
+  drawWheel();
+}
+
+/* ══════════════════════════════════════════════════
+   RENDER LIST
+   ══════════════════════════════════════════════════ */
+
+function renderList() {
+  const ul = document.getElementById('sliceList');
+  ul.innerHTML = '';
+  slices.forEach((s, i) => {
+    const li    = document.createElement('li');
+    li.className = 'slice-item';
+    li.innerHTML = `
+      <span class="slice-dot" style="background:${s.color}"></span>
+      <span class="slice-name">${s.label}</span>
+      ${isLucky(s.label) ? '' : ''}
+      <button class="remove-btn" title="Rimuovi" onclick="removeSlice(${i})">✕</button>
+    `;
+    ul.appendChild(li);
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   MODAL
+   ══════════════════════════════════════════════════ */
+
+function showModal(word) {
+  document.getElementById('modalWord').textContent = word;
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+/* ══════════════════════════════════════════════════
+   CONFETTI
+   ══════════════════════════════════════════════════ */
+
+const confCanvas = document.getElementById('confetti');
+const confCtx    = confCanvas.getContext('2d');
+
+function resizeConf() {
+  confCanvas.width  = window.innerWidth;
+  confCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeConf);
+resizeConf();
+
+let particles = [];
+
+function launchConfetti() {
+  particles = [];
+  const colors = ['#ffd700','#ff4444','#00e676','#e040fb','#00b0ff','#ff9800','#ffffff'];
+  for (let i = 0; i < 160; i++) {
+    particles.push({
+      x:    Math.random() * confCanvas.width,
+      y:    -10 - Math.random() * 100,
+      r:    4 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx:   (Math.random() - 0.5) * 4,
+      vy:   3 + Math.random() * 5,
+      rot:  Math.random() * Math.PI * 2,
+      rotV: (Math.random() - 0.5) * 0.2,
+      alpha: 1,
+    });
+  }
+  animConf();
+}
+
+function animConf() {
+  confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+  particles = particles.filter(p => p.alpha > 0.05);
+  particles.forEach(p => {
+    p.x   += p.vx;
+    p.y   += p.vy;
+    p.vy  += 0.12; // gravity
+    p.rot += p.rotV;
+    if (p.y > confCanvas.height * 0.6) p.alpha -= 0.018;
+
+    confCtx.save();
+    confCtx.translate(p.x, p.y);
+    confCtx.rotate(p.rot);
+    confCtx.globalAlpha = p.alpha;
+    confCtx.fillStyle   = p.color;
+    confCtx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * 1.6);
+    confCtx.restore();
+  });
+  if (particles.length) requestAnimationFrame(animConf);
+  else confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+}
+
+/* ══════════════════════════════════════════════════
+   INPUT ENTER
+   ══════════════════════════════════════════════════ */
+
+document.getElementById('wordInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addWord();
+});
+
+/* ══════════════════════════════════════════════════
+   INIT
+   ══════════════════════════════════════════════════ */
+
+renderList();
+drawWheel();
+</script>
+</body>
+</html>
